@@ -16,4 +16,4 @@ let articeSchema = mongoose.Schema({
     }
 });
 
-let article = module.exports = mongoose.model('Article', articeSchema);
+let Article = module.exports = mongoose.model('Article', articeSchema);

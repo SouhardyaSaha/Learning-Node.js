@@ -1,11 +1,68 @@
-const getNotes = require('./notes');
+// const chalk = require('chalk');
+// var validator = require('validator');
+const yargs = require('yargs');
+const notes = require('./notes.js');
 
-console.log(getNotes());
+// Add
+yargs.command({
+    command: 'add',
+    describe: 'adds a new note',
+    builder: {
+        title: {
+            describe:'Note title',
+            demandOption: true,
+            type: 'string',
+        },
+        body:{
+            describe: 'Note body',
+            demandOption: true,
+            type: 'string'
+        }
+    },
+    handler(argv) {  
+        notes.addNote(argv.title, argv.body);
+    }
+});
 
-var validator = require('validator');
+// Delete
+yargs.command({
+    command: 'remove',
+    describe: 'remove a note',
+    builder: {
+        title: {
+            describe: 'Note title',
+            demandOption: true,
+            type: 'string'
+        }
+    },
+    handler(argv) {  
+        notes.removeNote(argv.title);
+    }
+});
 
-console.log(validator.isURL('souhardya@gmaild'));
+// Listing
+yargs.command({
+    command: 'list',
+    describe: 'list notes',
+    handler() {  
+        notes.getNotes();
+    }
+});
 
+// Reading
+yargs.command({
+    command: 'read',
+    describe: 'read notes',
+    builder: {
+        title: {
+            describe: 'note title',
+            demandOption: true,
+            type: 'string'
+        }
+    },
+    handler(argv) {  
+        notes.readNote(argv.title);
+    }
+});
 
-const chalk = require('chalk')
-console.log(chalk.blue('hello'));
+yargs.parse();

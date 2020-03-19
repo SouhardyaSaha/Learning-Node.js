@@ -1,11 +1,44 @@
-doctype html
+//- doctype html
 
 html
     head
         title Learing Node.js
+        link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.css')
+        link(rel='stylesheet' href='/css/custom-style.css')
     body
+        nav.navbar.navbar-expand-lg.navbar-dark.bg-dark
+            a.navbar-brand(href='/') Traversy Media
+            button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbarNav', aria-controls='navbarNav', aria-expanded='false', aria-label='Toggle navigation')
+                span.navbar-toggler-icon
+            #navbarNav.collapse.navbar-collapse
+                ul.navbar-nav.mr-auto
+                    li.nav-item
+                        a.nav-link(href='/') Home 
+                        //- span.sr-only (current)
+                    li.nav-item
+                        a.nav-link(href='/article/add') Add Article
+                ul.navbar-nav.ml-auto
+                    if user
+                        li.nav-item
+                            a.nav-link(href='/users/logout') Logout
+                    else
+                        li.nav-item
+                            a.nav-link(href='/users/register') Register
+                        li.nav-item
+                            a.nav-link(href='/users/login') Login
+                        
+    .container
+        div(style='height: 20px;')
+        != messages('flash-message', locals)
+        if errors 
+            each error, i in errors
+                div.alert.alert-danger #{error.msg}
         block content
         br
         hr
         footer
             p Copyright &copy; 2020
+        
+        script(src='/bower_components/jquery/dist/jquery.js')  
+        script(src='/bower_components/bootstrap/dist/js/bootstrap.js')
+        script(src='/js/main.js')
