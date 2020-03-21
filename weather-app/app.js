@@ -7,7 +7,7 @@ if (!userLocation) {
     return console.log('Please Provide a Location');
 }
 
-geocode.getLocationInformation(userLocation, (error, { latitude, longitude, location }) => {
+geocode.getLocationInformation(userLocation, (error, { latitude, longitude, location } = {}) => {
 
     if (error) {
         return console.log(error);
