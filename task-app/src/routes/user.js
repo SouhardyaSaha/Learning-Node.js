@@ -1,14 +1,18 @@
 const express = require('express');
 const User = require('../models/user');
+const auth = require('../middlewares/auth');
 
 const router = express.Router();
 
+// register User
 router.post('/users', async (req, res) => {
     const user = new User(req.body);
 
     try {
         await user.save();
-        res.status(201).send(user);
+        const token = await user.generateAuthToken();
+
+        res.status(201).send({ user, token });
     } catch (error) {
         res.status(400).send(error);
     }
@@ -16,53 +20,79 @@ router.post('/users', async (req, res) => {
 
 });
 
-// read Users
-router.get('/users', async (req, res) => {
+// login user
+router.post('/users/login', async (req, res) => {
 
     try {
-        const users = await User.find({});
-        if (!users) {
-            return res.status(204).send('Empty Dataset');
+        const user = await User.findByCredentials(req.body.email, req.body.password);
+        const token = await user.generateAuthToken();
+
+        res.send({ user, token });
+    } catch (error) {
+        if (error.message) {
+            return res.status(400).send(error.message);
         }
-        res.send(users);
+        res.status(400).send(error);
+    }
+
+});
+
+// Logout User
+router.post('/users/logout', auth, async (req, res) => {
+
+    try {
+        req.user.tokens = req.user.tokens.filter((token) => token.token !== req.token);
+        await req.user.save();
+
+        res.send('Logged Out..!!');
+    } catch (error) {
+        res.send(error);
+    }
+
+});
+
+router.post('/users/logoutALL', auth, async (req, res) => {
+    try {
+        req.user.tokens = [];
+        await req.user.save();
+        res.send('Logged Out of All Sessions');
+    } catch (error) {
+        res.send(error);
+    }
+})
+
+// read User profile
+router.get('/users/me', auth, async (req, res) => {
+
+    try {
+        res.send(req.user);
     } catch (error) {
         res.status(500).send(error);
     }
 
 });
 
-// Get User by id
-router.get('/users/:id', async (req, res) => {
-
-    const _id = req.params.id;
-    try {
-        const user = await User.findById(_id);
-        if (!user) {
-            return res.status(404).send();
-        }
-        res.send(user);
-    } catch (error) {
-        res.status(500).send(error);
-    }
-
-});
-
-router.patch('/users/:id', async (req, res) => {
+// Update User
+router.patch('/users/me', auth, async (req, res) => {
 
     const updates = Object.keys(req.body);
     const allowedUpdates = ['name', 'age', 'email', 'password'];
     const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
 
     if (!isValidOperation) {
+        
         return res.status(400).send({ error: 'Invalid Requests..!!!' });
     }
-
+    
     try {
-        const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
-        if (!user) {
-            return res.status(404).send();
-        }
-        res.send(user);
+        
+        updates.forEach((update) => req.user[update] = req.body[update]);
+        await req.user.save();
+
+        // this next line by passes the mongoose middleware save event...so it is replaced by the upper 3 codes
+
+        // const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+        res.send(req.user);
     } catch (error) {
         // validation error
         res.status(400).send(error);
@@ -70,5 +100,14 @@ router.patch('/users/:id', async (req, res) => {
 
 
 });
+
+router.delete('/users/me', auth, async (req, res) => {
+    try {
+        await req.user.remove();
+        res.send(req.user);
+    } catch (error) {
+        res.send(error);
+    }
+})
 
 module.exports = router;
