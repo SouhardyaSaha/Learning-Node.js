@@ -25,18 +25,26 @@ router.post('/tasks', auth, async (req, res) => {
 router.get('/tasks', auth, async (req, res) => {
 
     const match = {};
-    if(req.query.isCompleted) {
+    if (req.query.isCompleted) {
         match.isCompleted = req.query.isCompleted === 'true';
     }
 
     const sort = {};
-    if(req.query.sortBy) {
+    if (req.query.sortBy) {
         const parts = req.query.sortBy.split(':');
         sort[parts[0]] = parts[1] === 'desc' ? -1 : 1;  // -1 for descending data and 1 for asc
-    }
+    }    
 
     try {
-        // const tasks = await Task.find({ owner: req.user._id });
+        // const tasks = await Task.find({ owner: req.user._id, isCompleted: req.query.isCompleted },[], {
+        //     limit: parseInt(req.query.limit), // if limit is undefined then it will be ignored automatically
+        //     skip: parseInt(req.query.skip),
+        //     sort
+        // });
+        
+        // res.send(tasks);
+
+        // The Alternate...using virtual tasks field from user model
         await req.user.populate({
             path: 'tasks',
             match,
@@ -46,10 +54,12 @@ router.get('/tasks', auth, async (req, res) => {
                 sort
             }
         }).execPopulate();
-        res.send(req.user.tasks); 
+
+        res.send(req.user.tasks);
+        
 
     } catch (error) {
-        res.status(500).send(error);
+        res.status(500).send(error.message);
     }
 
 });
